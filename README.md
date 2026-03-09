@@ -156,8 +156,9 @@ RT-DETR-l (Real-Time Detection Transformer large) — transformer əsaslı detek
 - Inference sürəti ~300ms — real-time avtonom sistem üçün qəbuledilməzdir
 
 ### Nəticə
-
 Optimal model ən güclü model deyil — şəraitə ən uyğun modeldir. 400 şəkil, CPU mühiti və 1 həftəlik deadline şəraitində YOLOv8n ən rasional seçimdir. RT-DETR-in üstünlükləri (izdihamlı səhnələr, kiçik uzaq obyektlər) yalnız böyük dataset və GPU mühitində tam reallaşa bilər.
+
+
 ---
 
 ## Training Qeydləri
