@@ -217,10 +217,14 @@ Optimal model ən güclü model deyil — şəraitə ən uyğun modeldir. 400 ş
 | **Ortalama** | **0.803** | **0.577** | **0.672** | **0.681** |
 
 **Klass üzrə müşahidələr:**
-- `bicycle` ən yaxşı nəticə verdi (AP50=0.812) — nisbətən fərqli vizual görünüşü var
-- `bus` yaxşı nəticə verdi (AP50=0.665) — böyük obyekt, tanımaq asandır
-- `car` orta nəticə verdi (AP50=0.691) — çox sayda annotasiya olmasına baxmayaraq müxtəlif açılardan çəkilmiş şəkillər çətinlik yaratdı
-- `motorbike` ən zəif nəticə verdi (AP50=0.558) — az annotasiya (88) və bicycle ilə vizual oxşarlıq
+
+**bicycle (AP50=0.812):** Ən yüksək nəticəni verən klassdır. Velosipedlər digər klasslardan vizual cəhətdən fərqlidir — incə çərçivə, iki təkər və spesifik forma modelin tanımasını asanlaşdırır. Həmçinin annotasiya keyfiyyəti yüksək idi, çünki velosipedlər adətən aydın görünürdü.
+
+**bus (AP50=0.665):** İkinci ən yaxşı nəticəni verən klassdır. Avtobuslar böyük, düzbucaqlı formaya malik olduğundan model onları nisbətən asanlıqla lokalizasiya edir. Confusion matrix-ə görə avtobusların 9%-i maşın kimi detect edildi — hər ikisi dörd təkərli nəqliyyat vasitəsi olduğundan bu anlaşılandır.
+
+**car (AP50=0.691):** Ən çox annotasiyaya malik klass olmasına (194 annotasiya) baxmayaraq orta nəticə verdi. Bunun əsas səbəbi müxtəlif açılardan çəkilmiş şəkillərdir — qarşıdan, arxadan, yandan çəkilmiş maşınlar model üçün fərqli görünür. Bundan əlavə, confusion matrix-ə görə maşınların 40%-i detect edilmədi.
+
+**motorbike (AP50=0.558):** Ən zəif nəticəni verən klassdır. İki əsas problem var: birincisi, az annotasiya sayı (88) — digər klasslara nisbətən model bu klassı daha az nümunə üzərində öyrəndi. İkincisi, motosikletlər bicycle ilə vizual oxşarlığa malikdir — confusion matrix göstərir ki, motosikletlərin 16%-i bicycle kimi, 50%-i isə background kimi buraxıldı.
 
 ---
 
@@ -229,20 +233,24 @@ Optimal model ən güclü model deyil — şəraitə ən uyğun modeldir. 400 ş
 ### Training Loss Curve
 ![Training Curves](runs/exp1/results.png)
 
-Bütün loss-lar (box, cls, dfl) həm train, həm val setdə sabit azalır. Val loss train loss-a paralel azalır — overfitting yoxdur. mAP@0.5 epoch 25-dən etibarən sürətlə artmağa başlayır.
+Training boyu bütün loss-lar (box, cls, dfl) həm train, həm val setdə sabit azalır. Val/cls_loss-da ilk epochlarda kəskin sıçrayış görünür — bu warmup mərhələsinin normal davranışıdır, lr0=0.005 ilə başlayan model ilk epochlarda qeyri-stabil olur. Sonrakı epochdan etibarən val loss train loss-a paralel azalmağa başlayır — overfitting  yoxdur. mAP@0.5 ilk epochlardan etibarən sürətlə artır, 75-ci epocha qədər yüksəlişini davam etdirir — model hələ öyrənməkdə idi, daha çox epoch mümkün ola bilərdi.
 
 ### Precision-Recall Curve
 ![PR Curve](notebooks/runs/detect/val3/BoxPR_curve.png)
 
-- bicycle ən yüksək əyri altı sahəsinə malikdir (AP=0.812) — model bu klassı ən yaxşı tanıyır
-- motorbike ən aşağı əyri altı sahəsi (AP=0.558) — az data və bicycle ilə oxşarlıq
+- motorbike ən aşağı AP (=0.558) malikdir— az data və bicycle ilə oxşarlıq
 - Ümumi mAP@0.5 = 0.681
+PR curve hər klass üçün confidence threshold dəyişdikcə Precision-Recall balansını göstərir. Bicycle əyrisi ən geniş sahəni əhatə edir (AP=0.812) — yüksək recall dəyərlərinə (0.8+) qədər precision yüksək qalır. Motorbike əyrisi ən sürətlə aşağı düşür — artıq recall=0.4-də precision 0.44-ə enir, bu klassın ən çətin olduğunu təsdiqləyir. Bus əyrisi maraqlıdır: recall=0.5-ə qədər precision 0.80+ saxlayır, lakin sonra kəskin düşür — model ya çox əminliklə tapır, ya da ümumiyyətlə buraxır.
 
 ### Confusion Matrix
 ![Confusion Matrix](notebooks/runs/detect/val3/confusion_matrix_normalized.png)
 
+Matrix bir neçə vacib məlumat verir. Bicycle-ın 74%-i düzgün detect edildi, 15%-i background kimi buraxıldı, 12%-i motorbike ilə qarışdı — bu qarışıqlıq gözləniləndir. Bus-un 68%-i düzgün detect edildi, 18%-i background kimi buraxıldı, 9%-i car kimi predict edildi. Car-ın 62%-i düzgün detect edildi, amma 40%-i background kimi buraxıldı — bu ən yüksək "miss" rəqəmidir. Motorbike ən problemli  klassdır: yalnız 37%-i düzgün detect edildi, 50%-i background kimi buraxıldı, 16%-i bicycle kimi predict edildi.
+
 ### Predicted Bounding Box-lar (Test Set)
 ![Predictions](predictions.png)
+
+Test setindən 10 şəkil üzərindəki predict nəticələri bir neçə müşahidəni ortaya qoyur. Yaxın planda olan aydın obyektlər yüksək confidence ilə detect edilir: motorbike 0.74, bus 0.86, car 0.90. Uzaqda və ya qismən görünən obyektlərdə confidence aşağı düşür: car 0 30, bicycle 0.60-0.63. 2008_002374.jpg şəkilindəki uçan motosiklet maraqlı haldır — model onu  aşağı confidence ilə detect etdi, çünki bu pozisiya training datada nadir idi. 2008_000619.jpg-də bir kadrda həm bus, həm car eyni anda detect edildi — model overlapping səhnələri də idarə edə bilir.
 
 ---
 
@@ -250,15 +258,25 @@ Bütün loss-lar (box, cls, dfl) həm train, həm val setdə sabit azalır. Val 
 
 **Confusion matrix-dən əldə edilən müşahidələr:**
 
-1. **Motorbike → background (0.50):** Motosikletlərin 50%-i background kimi buraxıldı — bu ən böyük problemdir. Az annotasiya (88) modelin motorbike-ı tanımasını çətinləşdirir.
+1. **Motorbike → background (0.50):** Ən böyük problemdir — motosikletlərin yarısı detect edilmədi. Az annotasiya (88) və müxtəlif açılardan çəkilmiş şəkillər modelin bu klassı öyrənməsini çətinləşdirdi.
 
-2. **Motorbike → bicycle qarışıqlığı (0.16):** Motosikletlərin 16%-i bicycle kimi detect edildi — hər iki klass iki təkərli, bənzər formaya malikdir.
+2. **Motorbike → bicycle qarışıqlığı (0.16):** Hər iki klass iki təkərli və oxşar formaya malik olduğundan, xüsusilə uzaq məsafədən çəkilmiş şəkillərdə model fərqi tapa bilmir.
 
-3. **Car → background (0.40):** Maşınların 40%-i detect edilmədi — müxtəlif açı və ölçülərdən çəkilmiş şəkillər modeli çaşdırır.
+3. **Car → background (0.40):** Maşınların 40%-i detect edilmədi. Müxtəlif açılardan (qarşıdan, arxadan, yandan) çəkilmiş şəkillər və sıx park səhnələrindəki overlapping obyektlər əsas səbəbdir.
 
-4. **Bus → car qarışıqlığı (0.09):** Avtobusların 9%-i maşın kimi detect edildi — hər ikisi böyük dörd təkərli nəqliyyat vasitəsidir.
+4. **Bus → car qarışıqlığı (0.09):** Hər ikisi böyük, düzbucaqlı nəqliyyat vasitəsidir. Minivan tipli avtobus şəkillərində bu qarışıqlıq xüsusilə anlaşılandır.
 
-5. **Predictions şəkilinə görə:** Model yaxın planda olan obyektləri yüksək confidence ilə (0.74-0.90) detect edir, uzaq və qismən görünən obyektlərdə isə aşağı confidence (0.30-0.40) göstərir.
+5. **Bicycle ↔ Motorbike simmetrik qarışıqlığı:** Bicycle-ın 12%-i motorbike, motorbike-ın 16%-i bicycle kimi predict edildi — qarışıqlıq iki tərəflidir.
+
+6. **Yaxın vs uzaq obyektlər:** Model yaxın planda olan obyektləri yüksək confidence ilə detect edir (bus 0.86, car 0.90), uzaq və qismən görünən obyektlərdə isə confidence aşağı düşür (car 0.30).
+
+**Detect edilməyən şəkillərin analizi:**
+
+![Failure Cases](failure_cases.png)
+
+Detect edilməyən şəkillərin analizi üç əsas xəta kateqoriyasını ortaya qoyur. Birincisi, qeyri-adi pozisiya və bucaq — havada uçan motosiklet və kəskin döngədə əyilmiş motosiklet kimi training datada nadir olan hallarda model obyekti tanıya bilmir. İkincisi, qismən örtülmüş obyektlər — insanlar, dirəklər və ya digər obyektlər tərəfindən örtülmüş velosiped və motosikletləri model detect etmir, çünki görünən hissə kifayət qədər fərqli feature vermir. Üçüncüsü, həddən artıq yaxın çəkilmiş şəkillər — velosipedin yalnız çərçivə və dişli hissəsinin göründüyü şəkillərdə model tam obyekti tanıya bilmir.
+
+**Ümumi nəticə:** Bu xəta hallarının hamısı daha çox müxtəlif annotasiya nümunəsi — qeyri-adi açılar, qismən görünən obyektlər, həddən yaxın çəkilmiş şəkillər — ilə həll oluna bilər.
 
 ---
 
@@ -266,19 +284,21 @@ Bütün loss-lar (box, cls, dfl) həm train, həm val setdə sabit azalır. Val 
 
 **İstifadə edilən LLM:** Claude Sonnet 4.5 (claude.ai)
 
-**Nə üçün istifadə edildi:** Bütün layihə boyu kod yazmaq, debug etmək, konseptləri anlamaq və README hazırlamaq üçün
+**Nə üçün istifadə edildi:** Bütün layihə boyu kod yazmaq, debug etmək,  konseptləri dərindən anlamaq, alternativ yanaşmaları müzakirə etmək və README hazırlamaq üçün istifadə edildi.
 
 **Əsas promptlar və istifadə:**
 
-1. *"PASCAL VOC XML-dən YOLO formatına çevirmə + train/val/test bölgüsü edən notebook yaz"* → `01_data_prep.ipynb` kodu əsasən istifadə edildi, path-lar dəyişdirildi
+1. *"PASCAL VOC XML-dən YOLO formatına çevirmə, hər klasdan bərabər sayda şəkil seçmə və train/val/test bölgüsü edən notebook yaz. Seed=42 istifadə et, class imbalance-a diqqət et"* → `01_data_prep.ipynb` kodu əsas götürülüb path-lar və parametrlər özüm tənzimlədim.
 
-2. *"CVAT export-undan sonra val/test üçün VOC XML-dən label yaradan, data.yaml yaradan notebook yaz"* → `01_data_prep_part2.ipynb` kodu istifadə edildi
+2. *"CVAT YOLO 1.1 export-undan label-ları götür, val/test üçün VOC XML-dən avtomatik label yarat, data.yaml yarat və annotasiya statistikasını vizuallaşdır"* → `01_data_prep_part2.ipynb` kodu istifadə edildi, CVAT export strukturu debug mərhələsində əlavə tənzimləndi.
 
-3. *"YOLOv8n fine-tuning notebook-u yaz, CPU üçün optimallaşdır"* → `02_training.ipynb` kodu istifadə edildi, parametrlər özüm seçdim və əsaslandırdım
+3. *"YOLOv8n-i CPU-da fine-tune edən notebook yaz. Windows-da Jupyter-də  multiprocessing xətasının qarşısını al, training progress-i izlə"* → `02_training.ipynb` kodu istifadə edildi. Hyperparameter seçimi (lr0, epochs, patience, flipud) müstəqil qərar verdim və hər birini əsaslandırdım.
 
-4. *"Test setində qiymətləndirmə, inference sürəti, PR curve, predicted bbox vizuallaşdırma notebook-u yaz"* → `03_evaluation.ipynb` kodu istifadə edildi, PR curve hissəsi debug edildi
+4. *"Test setində qiymətləndirmə notebook-u yaz: mAP, precision, recall, F1 klass üzrə göstər, inference sürəti ölç, PR curve çək, predicted bbox-ları vizuallaşdır, detect edilməyən şəkilləri ayrıca göstər"* → `03_evaluation.ipynb` kodu istifadə edildi. PR curve Ultralytics tərəfindən avtomatik yaranmadığı üçün `test_results.box` obyektindən manual olaraq çəkildi.
 
-**İstifadə edilməyən hissələr:** LLM-in bəzi tövsiyələri (məsələn epoch sayı, batch size) özüm dəyişdirdim — model haqqında öz qərarlarımı verdim.
+5. *"Confusion matrix-dən və failure cases şəkillərindən konkret xəta kateqoriyalarını çıxar, hər xətanın texniki səbəbini izah et"* → Xəta analizi bölməsi bu müzakirə əsasında yazıldı.
+
+**Müstəqil qərarlar:** Model seçimi, LLM-in bəzi ilkin tövsiyələrinə (epoch=50, lr0=0.01) baxmayaraq, 50 epoch-dan sonra val loss-un platoya çatdığını müşahidə edərək lr0=0.005 və epochs=75 ilə yenidən train etdim — mAP@0.5 0.436-dan 0.681-ə yüksəldi. flipud=0.0 qərarını da müstəqil verdim: avtomobillər real mühitdə heç vaxt üst-aşağı olmur, bu augmentasiya mənasızdır.
 
 ---
 
