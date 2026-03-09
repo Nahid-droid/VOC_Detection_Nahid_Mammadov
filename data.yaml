@@ -1,0 +1,10 @@
+names:
+- bicycle
+- bus
+- car
+- motorbike
+nc: 4
+path: C:/Users/user/Desktop/project/data
+test: images/test
+train: images/train
+val: images/val
