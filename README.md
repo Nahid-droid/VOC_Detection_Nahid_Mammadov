@@ -250,7 +250,7 @@ Matrix bir neçə vacib məlumat verir. Bicycle-ın 74%-i düzgün detect edildi
 ### Predicted Bounding Box-lar (Test Set)
 ![Predictions](predictions.png)
 
-Test setindən 10 şəkil üzərindəki predict nəticələri bir neçə müşahidəni ortaya qoyur. Yaxın planda olan aydın obyektlər yüksək confidence ilə detect edilir: motorbike 0.74, bus 0.86, car 0.90. Uzaqda və ya qismən görünən obyektlərdə confidence aşağı düşür: car 0 30, bicycle 0.60-0.63. 2008_002374.jpg şəkilindəki uçan motosiklet maraqlı haldır — model onu  aşağı confidence ilə detect etdi, çünki bu pozisiya training datada nadir idi. 2008_000619.jpg-də bir kadrda həm bus, həm car eyni anda detect edildi — model overlapping səhnələri də idarə edə bilir.
+Test setindən 10 şəkil üzərindəki predict nəticələri bir neçə müşahidəni ortaya qoyur. Yaxın planda olan aydın obyektlər yüksək confidence ilə detect edilir: motorbike 0.74, bus 0.86, car 0.90. Uzaqda və ya qismən görünən obyektlərdə confidence aşağı düşür: car 0 30, bicycle 0.60-0.63. 2008_002374.jpg şəkilindəki uçan motosiklet maraqlı haldır — model onu detect etmədi, çünki bu pozisiya training datada nadir idi. 2008_000619.jpg-də bir kadrda həm bus, həm car eyni anda detect edildi — bu şəkildə ancaq car olsa belə, bu modelin overlapping səhnələrini nisbətən idarə edə bilməsini göstərir.
 
 ---
 
